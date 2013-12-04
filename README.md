@@ -1,2 +1,0 @@
-lua-static-lang-test
-====================
