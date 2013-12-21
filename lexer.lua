@@ -45,6 +45,7 @@ local keywords = {
 	['type'] = true,
 	['class'] = true,
 	['struct'] = true,
+	['variant'] = true,
 	['return'] = true,
 	['true'] = true,
 	['false'] = true,

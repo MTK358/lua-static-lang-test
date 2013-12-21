@@ -27,6 +27,7 @@ local expr_start_tokens = {
 	['type'] = true,
 	['class'] = true,
 	['struct'] = true,
+	['variant'] = true,
 	['return'] = true,
 	['new'] = true,
 	['let'] = true,
@@ -179,6 +180,20 @@ function nt.base_expr(s)
 	elseif s.tok == 'new' then
 		nexttok(s)
 		local ty = nt.tyexpr(s)
+		if s.tok == '.' then
+			nexttok(s)
+			local name = s.tokval
+			expect(s, '<name>')
+			expect(s, '(')
+			local val
+			if s.tok ~= ')' then
+				val = nt.expr(s)
+			else
+				val = ast_node(s, 'void')
+			end
+			expect(s, ')')
+			return ast_node(s, 'new_variant', ty, name, val)
+		end
 		expect(s, '{')
 		local e = ast_node(s, 'new_kv', ty, {})
 		local first = true
@@ -216,6 +231,13 @@ function nt.base_expr(s)
 		local name = s.tokval
 		expect(s, '<name>')
 		local t = nt.struct_tyexpr(s)
+		return ast_node(s, 'typedef', name, t)
+
+	elseif s.tok == 'variant' then
+		nexttok(s)
+		local name = s.tokval
+		expect(s, '<name>')
+		local t = nt.variant_tyexpr(s)
 		return ast_node(s, 'typedef', name, t)
 
 	elseif s.tok == '-' then
@@ -435,6 +457,35 @@ function nt.class_tyexpr(s)
 	return t;
 end
 
+function nt.variant_tyexpr(s)
+	local l,c = s.line, s.col
+	expect(s, '(')
+	local t = ast_node(s, 'ty_variant', {})
+	local first = true
+	while s.tok ~= ')' do
+		if first then
+			first = false
+		else
+			expect(s, ',')
+		end
+		if s.tok == '<name>' then
+			local name = s.tokval
+			nexttok(s)
+			local ty
+			if s.tok ~= ',' and s.tok ~= ')' then
+				ty = nt.tyexpr(s)
+			else
+				ty = ast_node(s, 'ty_tuple')
+			end
+			table.insert(t[2], {name=name, ty=ty})
+		else
+			expect(s, ')')
+		end
+	end
+	nexttok(s)
+	return t;
+end
+
 function nt.tyexpr(s)
 	if s.tok == '<name>' then
 		local text = s.tokval
@@ -455,6 +506,10 @@ function nt.tyexpr(s)
 	elseif s.tok == 'class' then
 		nexttok(s)
 		return nt.class_tyexpr(s)
+
+	elseif s.tok == 'variant' then
+		nexttok(s)
+		return nt.variant_tyexpr(s)
 
 	elseif s.tok == '...' then
 		nexttok(s)

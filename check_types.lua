@@ -1,5 +1,6 @@
 
 local types = require 'types'
+local const = require 'const'
 
 ------------------------------------------------------------------------------
 -- Container for local varaible information
@@ -582,6 +583,21 @@ check_types_tbl = {
 			s.current_varscope:add_explicit_return(node[2].ty)
 		end
 		node.ty = types.builtin_noret
+	end;
+
+	['new_variant'] = function (s, node, tsuggest)
+		node[2] = node[2]:resolve_named(s)
+		local vty = node[2]
+		if not (vty.valstruct and vty.valstruct.kind == 'variant') then
+			s.error(('expected variant type'):format(), false, node:get_location())
+		end
+		local idx = vty.valstruct.name_to_index[node[3]]
+		if not idx then
+			s.error(('variant type does not have a varaint named `%s`'):format(node[3]), false, node:get_location())
+		end
+		check_types(s, node[4], vty.valstruct.members[idx])
+		expect_type(s, node, 4, vty.valstruct.members[idx])
+		node.ty = vty
 	end;
 
 	['new_kv'] = function (s, node, tsuggest)

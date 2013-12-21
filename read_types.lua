@@ -50,11 +50,15 @@ local function parse_type_node(s, node)
 		end
 
 	elseif node[1] == 'ty_tuple' then
-		local tbl = {}
-		for i = 2, #node do
-			tbl[i - 1] = parse_type_node(s, node[i])
+		if node[2] then
+			local tbl = {}
+			for i = 2, #node do
+				tbl[i - 1] = parse_type_node(s, node[i])
+			end
+			return types.new_tuple(tbl)
+		else
+			return types.builtin_void
 		end
-		return types.new_tuple(tbl)
 
 	elseif node[1] == 'ty_struct' then
 		for i, member in ipairs(node[2]) do
@@ -67,6 +71,12 @@ local function parse_type_node(s, node)
 			member.ty = parse_type_node(s, member.ty)
 		end
 		return types.new_class(node[2])
+
+	elseif node[1] == 'ty_variant' then
+		for i, member in ipairs(node[2]) do
+			member.ty = parse_type_node(s, member.ty)
+		end
+		return types.new_variant(node[2])
 
 	elseif node[1] == 'ty_vararg' then
 		return types.builtin_vararg
@@ -207,6 +217,13 @@ read_types_tbl = {
 		node[2] = parse_type_node(s, node[2])
 		for i, v in ipairs(node[3]) do
 			read_types(s, v.val)
+		end
+	end;
+
+	['new_variant'] = function (s, node)
+		node[2] = parse_type_node(s, node[2])
+		if node[4] then
+			read_types(s, node[4])
 		end
 	end;
 

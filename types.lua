@@ -24,6 +24,14 @@ function type_mt:to_str()
 		end
 		return s..')'
 
+	elseif self.valstruct and self.valstruct.kind == 'variant' then
+		local s = 'variant('
+		for i, v in ipairs(self.valstruct.member_names) do
+			if i ~= 1 then s = s .. ',' end
+			s = s .. v
+		end
+		return s..')'
+
 	elseif self.cls then
 		local s = 'class('
 		for i, v in ipairs(self.cls.members) do
@@ -78,6 +86,8 @@ end
 function type_mt:num_vars()
 	if self.valstruct then
 		return self.valstruct.num_vars
+	elseif self == types.builtin_void then
+		return 0
 	else
 		return 1
 	end
@@ -169,6 +179,30 @@ function types.new_struct(members)
 		prev_offset = prev_offset + t.valstruct.members[i]:num_vars()
 	end
 	t.valstruct.num_vars = prev_offset
+	return t
+end
+
+function types.new_variant(members)
+	local variant_names = {}
+	local variant_types = {}
+	local name_to_index = {}
+	local num_vars = 0
+	for i, v in ipairs(members) do
+		num_vars = math.max(num_vars, v.ty:num_vars())
+		variant_names[i] = v.name
+		variant_types[i] = v.ty
+		name_to_index[v.name] = i
+	end
+	local t = setmetatable({
+		valstruct = {
+			kind = 'variant',
+			members = variant_types,
+			num_variants = #members,
+			variant_names = variant_names,
+			name_to_index = name_to_index,
+			num_vars = num_vars + 1,
+		},
+	}, type_mt)
 	return t
 end
 

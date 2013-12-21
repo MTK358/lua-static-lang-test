@@ -141,6 +141,10 @@ e2s_statement_tbl = {
 		return new_stat
 	end;
 
+	['new_variant'] = function (s, node)
+		return {'void'}
+	end;
+
 	['vararg'] = dummy_statement,
 	['float'] = dummy_statement,
 	['int'] = dummy_statement,
@@ -373,6 +377,26 @@ e2s_expression_tbl = {
 		else
 			return e2s_expression(s, node[2], stat, multret_expanded)
 		end
+	end;
+
+	['new_variant'] = function (s, node, stat, multret_expanded)
+		local v = node.ty.valstruct
+		local idx = v.name_to_index[node[3]]
+		local new_expr, new_stat = {'comma', {'int', idx}}, stat
+		if v.members[idx] ~= types.builtin_void then
+			if node[4].ty:num_vars() ~= node.ty:num_vars() - 1 then
+				multret_expanded = false
+			end
+			new_expr[3], new_stat = e2s_expression(s, node[4], new_stat, multret_expanded)
+			for i = node[4].ty:num_vars(), node.ty:num_vars()-2 do
+				table.insert(new_expr, {'nil'})
+			end
+		else
+			for i = 2, node.ty:num_vars() do
+				table.insert(new_expr, {'nil'})
+			end
+		end
+		return new_expr, new_stat
 	end;
 
 	['vararg'] = expr_noop,
