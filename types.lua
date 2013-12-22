@@ -273,5 +273,110 @@ types.builtin_dynamic = setmetatable({
 	end,
 }, type_mt)
 
+function types.add_binop(op, lhs, rhs, res)
+	lhs.binops_lhs = lhs.binops_lhs or {}
+	rhs.binops_rhs = rhs.binops_rhs or {}
+	lhs.binops_lhs[op] = lhs.binops_lhs[op] or {}
+	rhs.binops_rhs[op] = rhs.binops_rhs[op] or {}
+	lhs.binops_lhs[op][rhs] = res
+	rhs.binops_rhs[op][lhs] = res
+end
+
+function types.add_unop(op, val, res)
+	val.unops = val.unops or {}
+	val.unops[op] = res
+end
+
+local cmp_ops = {['<']=true, ['<=']=true, ['>']=true, ['>=']=true}
+
+function types.binop_supported(op, lhs, rhs)
+	if op == '==' or op == '!=' then
+		if lhs:equal(rhs) and lhs:num_vars() == 1 then
+			return types.builtin_bool
+		else
+			return
+		end
+	end
+	if cmp_ops[op] then
+		op = '<'
+	end
+	local t = lhs.binops_lhs
+	if t then
+		local res = t[op] and t[op][rhs]
+		if res then return res end
+	end
+	local t = rhs.binops_rhs
+	if t then
+		local res = t[op] and t[op][lhs]
+		if res then return res end
+	end
+	if (lhs == types.builtin_dynamic and rhs:num_vars() == 1) or
+		(rhs == types.builtin_dynamic and lhs:num_vars() == 1) then
+		return types.builtin_dynamic
+	end
+end
+
+function types.unop_supported(op, ty)
+	local t = ty.unops
+	if t then
+		local res = t[op]
+		if res then return res end
+	end
+end
+
+types.add_binop('+', types.builtin_int,   types.builtin_int,   types.builtin_int  )
+types.add_binop('+', types.builtin_float, types.builtin_int,   types.builtin_float)
+types.add_binop('+', types.builtin_int,   types.builtin_float, types.builtin_float)
+types.add_binop('+', types.builtin_float, types.builtin_float, types.builtin_float)
+
+types.add_binop('-', types.builtin_int,   types.builtin_int,   types.builtin_int  )
+types.add_binop('-', types.builtin_float, types.builtin_int,   types.builtin_float)
+types.add_binop('-', types.builtin_int,   types.builtin_float, types.builtin_float)
+types.add_binop('-', types.builtin_float, types.builtin_float, types.builtin_float)
+
+types.add_binop('*', types.builtin_int,   types.builtin_int,   types.builtin_int  )
+types.add_binop('*', types.builtin_float, types.builtin_int,   types.builtin_float)
+types.add_binop('*', types.builtin_int,   types.builtin_float, types.builtin_float)
+types.add_binop('*', types.builtin_float, types.builtin_float, types.builtin_float)
+
+types.add_binop('/', types.builtin_int,   types.builtin_int,   types.builtin_float)
+types.add_binop('/', types.builtin_float, types.builtin_int,   types.builtin_float)
+types.add_binop('/', types.builtin_int,   types.builtin_float, types.builtin_float)
+types.add_binop('/', types.builtin_float, types.builtin_float, types.builtin_float)
+
+types.add_binop('//', types.builtin_int,   types.builtin_int,   types.builtin_int )
+types.add_binop('//', types.builtin_float, types.builtin_int,   types.builtin_int )
+types.add_binop('//', types.builtin_int,   types.builtin_float, types.builtin_int )
+types.add_binop('//', types.builtin_float, types.builtin_float, types.builtin_int )
+
+types.add_binop('%', types.builtin_int,   types.builtin_int,   types.builtin_int  )
+types.add_binop('%', types.builtin_float, types.builtin_int,   types.builtin_float)
+types.add_binop('%', types.builtin_int,   types.builtin_float, types.builtin_float)
+types.add_binop('%', types.builtin_float, types.builtin_float, types.builtin_float)
+
+types.add_binop('^', types.builtin_int,   types.builtin_int,   types.builtin_int  )
+types.add_binop('^', types.builtin_float, types.builtin_int,   types.builtin_float)
+types.add_binop('^', types.builtin_int,   types.builtin_float, types.builtin_float)
+types.add_binop('^', types.builtin_float, types.builtin_float, types.builtin_float)
+
+types.add_binop('<', types.builtin_int,   types.builtin_int,   types.builtin_bool)
+types.add_binop('<', types.builtin_float, types.builtin_int,   types.builtin_bool)
+types.add_binop('<', types.builtin_int,   types.builtin_float, types.builtin_bool)
+types.add_binop('<', types.builtin_float, types.builtin_float, types.builtin_bool)
+
+types.add_binop('..', types.builtin_string, types.builtin_string, types.builtin_string)
+types.add_binop('<', types.builtin_string, types.builtin_string, types.builtin_bool)
+
+types.add_unop('-', types.builtin_int, types.builtin_int)
+types.add_unop('-', types.builtin_float, types.builtin_float)
+
+types.add_binop('and', types.builtin_bool, types.builtin_bool, types.builtin_bool)
+types.add_binop('or', types.builtin_bool, types.builtin_bool, types.builtin_bool)
+
+types.add_unop('not', types.builtin_bool, types.builtin_bool)
+types.add_unop('not', types.builtin_dynamic, types.builtin_bool)
+
+
+
 return types
 

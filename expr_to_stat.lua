@@ -305,6 +305,9 @@ e2s_expression_tbl = {
 		local new_stat = stat
 		node[3], new_stat = e2s_expression(s, node[3], new_stat)
 		node[4], new_stat = e2s_expression(s, node[4], new_stat)
+		if node[2] == '!=' then
+			node[2] = '~='
+		end
 		return node, new_stat
 	end;
 

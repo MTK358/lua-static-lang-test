@@ -29,7 +29,6 @@ local char_token_tbl = {
 	--['~'] = {false, ['='] = '~='},
 	--['!'] = {false, ['='] = '~='},
 	['@'] = true,
-	['!'] = true,
 }
 
 local keywords = {
@@ -51,6 +50,9 @@ local keywords = {
 	['false'] = true,
 	['nil'] = true,
 	['new'] = true,
+	['not'] = true,
+	['and'] = true,
+	['or'] = true,
 }
 
 local function is_name_start_char(c)

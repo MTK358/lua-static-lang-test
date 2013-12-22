@@ -1,6 +1,5 @@
 
 local types = require 'types'
-local const = require 'const'
 
 ------------------------------------------------------------------------------
 -- Container for local varaible information
@@ -563,13 +562,22 @@ check_types_tbl = {
 		expect_value(s, node, 3)
 		check_types(s, node[4], nil)
 		expect_value(s, node, 4)
-		node.ty = types.builtin_dynamic
+		local res = types.binop_supported(node[2], node[3].ty, node[4].ty)
+		if not res then
+			s.error(('binary operator `%s` not supported for `%s` and `%s` parameters'):format(node[2], node[3].ty:to_str(), node[4].ty:to_str()), false, node:get_location())
+		end
+		node.ty = res
 	end;
 
 	['unop'] = function (s, node, tsuggest)
 		check_types(s, node[3], nil)
 		expect_value(s, node, 3)
 		node.ty = types.builtin_dynamic
+		local res = types.unop_supported(node[2], node[3].ty)
+		if not res then
+			s.error(('unary operator `%s` not supported for `%s` parameter'):format(node[2], node[3].ty:to_str()), false, node:get_location())
+		end
+		node.ty = res
 	end;
 
 	['return'] = function (s, node, tsuggest)
