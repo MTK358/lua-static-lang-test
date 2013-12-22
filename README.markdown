@@ -45,7 +45,7 @@ Example code:
     
     # function (explicit return type)
     var vec2_add = fn (a: Vec2, b: Vec2 -> Vec2) (
-	    new Vec2 {x=0,y=0}  # operators not supported, should be {x = a.x + b.x, y = a.y + b.y}
+	    new Vec2 {x = a.x + b.x, y = a.y + b.y}
     );
     
     var a = vec2_new(1, 2);
@@ -71,45 +71,60 @@ Example code:
     f(new V.d(true));
     f(new V.c());
     
-Example output (reformatted for readability):
-
-    local ____tmp_0,____tmp_1=(1),(2);
-  
-    local o=({(123),"test",(false),});
- 
+Example output:
+    
+     local ____tmp_0,____tmp_1=(1),(2);
+    
+    
+    
+    
+     local o=({(123),"test",(false),});
+    
     o[3]=(true);
-   
-    o[1]=(321);
- 
-    ____tmp_1=o[1]; 
- 
-    do
-      local ____tmp_14;
-      if o[3] then ____tmp_14=(456) else ____tmp_14=(789) end ;
-      ____tmp_0=____tmp_14
-    end ;
     
-    local vec2_new=(function(x,y) return x,y end);
+    o[1]=(321);____tmp_1=
     
-    local vec2_add=(function(____tmp_2,____tmp_3,____tmp_4,____tmp_5) return (0),(0) end);
+    o[1]; do  local ____tmp_20;
     
-    local ____tmp_6,____tmp_7=vec2_new((1),(2));
-        
-    local ____tmp_8,____tmp_9=vec2_new((5),(6));
     
-    local ____tmp_10,____tmp_11=vec2_add(____tmp_6,____tmp_7,____tmp_8,____tmp_9);
-
-    local ____tmp_12,____tmp_13;
-    do
-      local ____tmp_15,____tmp_16=vec2_add(____tmp_8,____tmp_9,____tmp_10,____tmp_11);
-      ____tmp_12,____tmp_13=vec2_add(____tmp_15,____tmp_16,vec2_new((3),(4)))
-    end ;
-
-    local f=(function(____tmp_0,____tmp_1,____tmp_2) end);                                      
-                                                                                                 
-    local ____tmp_3,____tmp_4,____tmp_5=(2),(5),"asdf";                                           
-                                                                                                   
-    f(____tmp_3,____tmp_4,____tmp_5);                                                               
-    f((4),(true),(nil));                                                                            
+    
+    
+    
+     if o[3] then ____tmp_20=(456) else ____tmp_20=(789) end ;____tmp_0=____tmp_20 end ;
+    
+    
+    
+    
+    
+    
+    
+     local vec2_new=(function(x,y) return x,y end);
+    
+    
+    
+    
+     local vec2_add=(function(____tmp_2,____tmp_3,____tmp_4,____tmp_5) return (____tmp_2 + ____tmp_4),(____tmp_3 + ____tmp_5) end);
+    
+     local ____tmp_6,____tmp_7=vec2_new((1),(2));
+    
+     local ____tmp_8,____tmp_9=vec2_new((5),(6));
+    
+     local ____tmp_10,____tmp_11=vec2_add(____tmp_6,____tmp_7,____tmp_8,____tmp_9); local ____tmp_12,____tmp_13; do  local ____tmp_21,____tmp_22=
+    
+    vec2_add(____tmp_8,____tmp_9,____tmp_10,____tmp_11);____tmp_12,____tmp_13=vec2_add(____tmp_21,____tmp_22,vec2_new((3),(4))) end ;
+    
+    
+    
+    
+    
+    
+    
+    
+     local f=(function(____tmp_14,____tmp_15,____tmp_16) end);
+    
+     local ____tmp_17,____tmp_18,____tmp_19=(2),(5),"asdf";
+    
+    f(____tmp_17,____tmp_18,____tmp_19);
+    f((4),(true),(nil));
     f((3),(nil),(nil))
     
