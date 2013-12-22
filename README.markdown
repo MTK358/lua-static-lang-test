@@ -55,6 +55,21 @@ Example code:
     var c = vec2_add(a, b);
     
     var d = vec2_add(vec2_add(b, c), vec2_new(3, 4));
+	 
+    variant V (
+    	a (string, string),
+    	b (float, string),
+    	c,
+    	d bool
+    );
+    
+    let f = fn(v: V) ();
+    
+    let x = new V.b((5, "asdf"));
+    
+    f(x);
+    f(new V.d(true));
+    f(new V.c());
     
 Example output (reformatted for readability):
 
@@ -90,3 +105,11 @@ Example output (reformatted for readability):
       ____tmp_12,____tmp_13=vec2_add(____tmp_15,____tmp_16,vec2_new((3),(4)))
     end ;
 
+    local f=(function(____tmp_0,____tmp_1,____tmp_2) end);                                      
+                                                                                                 
+    local ____tmp_3,____tmp_4,____tmp_5=(2),(5),"asdf";                                           
+                                                                                                   
+    f(____tmp_3,____tmp_4,____tmp_5);                                                               
+    f((4),(true),(nil));                                                                            
+    f((3),(nil),(nil))
+    
