@@ -434,8 +434,13 @@ end
 
 function nt.class_tyexpr(s)
 	local l,c = s.line, s.col
+	local base = nil
+	if s.tok == ':' then
+		nexttok(s)
+		base = nt.tyexpr(s)
+	end
 	expect(s, '(')
-	local t = {'ty_class', {}}
+	local t = {'ty_class', {}, base}
 	local first = true
 	while s.tok ~= ')' do
 		if first then

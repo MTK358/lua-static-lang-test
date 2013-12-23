@@ -74,6 +74,34 @@ function type_mt:resolve_named(s, visited)
 		self.names_resolved = true
 
 	elseif self.cls then
+		if self.cls.base then
+			self.cls.base = self.cls.base:resolve_named(s)
+			if not self.cls.base.cls then
+				s.error(('classes cannot inherit non-class types'):format(), false, self.line, self.col)
+			end
+			for i = #self.cls.base.cls._members, 1 do
+				table.insert(self.cls._members, 1, self.cls.base.cls._members[i])
+			end
+		end
+		local members = self.cls._members
+		local member_types, member_names, name_to_index = {}, {}, {}
+		for i, v in ipairs(members) do
+			member_types[i] = members[i].ty
+			member_names[i] = members[i].name
+			name_to_index[members[i].name] = i
+		end
+		self.cls.packed = true
+		self.cls.members = member_types
+		self.cls.num_members = #members
+		self.cls.member_offsets = {}
+		self.cls.member_names = member_names
+		self.cls.name_to_index = name_to_index
+		local prev_offset = 0
+		for i, v in ipairs(member_types) do
+			self.cls.member_offsets[i] = prev_offset
+			prev_offset = prev_offset + self.cls.members[i]:num_vars()
+		end
+		self.cls.num_vars = prev_offset
 		for i, v in ipairs(self.cls.members) do
 			self.cls.members[i] = v:resolve_named(s)
 		end
@@ -115,6 +143,14 @@ end
 function type_mt:is_acceptable(other)
 	if self.is_acceptable_fn then
 		return self:is_acceptable_fn(other)
+	elseif self.cls then
+		if other.cls then
+			local c = other
+			repeat
+				if c == self then return true end
+				c = c.cls.base
+			until not c
+		end
 	else
 		return self:equal(other)
 	end
@@ -206,29 +242,38 @@ function types.new_variant(members)
 	return t
 end
 
-function types.new_class(members)
+function types.new_class(members, base)
+	--[[
 	local member_types, member_names, name_to_index = {}, {}, {}
 	for i, v in ipairs(members) do
 		member_types[i] = members[i].ty
 		member_names[i] = members[i].name
 		name_to_index[members[i].name] = i
 	end
+	--]]
 	local t = setmetatable({
 		cls = {
+			_members = members,
+			base = base,
+			--[[
 			packed = true,
 			members = member_types,
 			num_members = #members,
 			member_offsets = {},
 			member_names = member_names,
 			name_to_index = name_to_index,
+			base = base,
+			--]]
 		},
 	}, type_mt)
+	--[[
 	local prev_offset = 0
 	for i, v in ipairs(member_types) do
 		t.cls.member_offsets[i] = prev_offset
 		prev_offset = prev_offset + t.cls.members[i]:num_vars()
 	end
 	t.cls.num_vars = prev_offset
+	--]]
 	return t
 end
 

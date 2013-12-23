@@ -70,7 +70,10 @@ local function parse_type_node(s, node)
 		for i, member in ipairs(node[2]) do
 			member.ty = parse_type_node(s, member.ty)
 		end
-		return types.new_class(node[2])
+		if node[3] then
+			node[3] = parse_type_node(s, node[3])
+		end
+		return types.new_class(node[2], node[3])
 
 	elseif node[1] == 'ty_variant' then
 		for i, member in ipairs(node[2]) do
