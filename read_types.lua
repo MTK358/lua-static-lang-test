@@ -86,6 +86,13 @@ local function parse_type_node(s, node)
 
 	elseif node[1] == 'ty_noret' then
 		return types.builtin_noret
+		
+	elseif node[1] == 'ty_function' then
+		for i, v in ipairs(node[2]) do
+			v.ty = parse_type_node(s, v.ty)
+		end
+		node[3] = parse_type_node(s, node[3])
+		return types.new_function(node[2], node[3], node[4])
 
 	end
 	error('this should be unreachable')

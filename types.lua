@@ -65,15 +65,22 @@ function type_mt:resolve_named(s, visited)
 		end
 		return t:resolve_named(s)
 
+	elseif self.is_function == true then
+		for i, v in ipairs(self.call.params) do
+			v.ty = v.ty:resolve_named(s)
+		end
+		self.call.ret = self.call.ret:resolve_named(s)
+
 	elseif self.valstruct then
+		self.names_resolved = true
 		visited = visited or {}
 		visited[self] = true
 		for i, v in ipairs(self.valstruct.members) do
 			self.valstruct.members[i] = v:resolve_named(s, visited)
 		end
-		self.names_resolved = true
 
 	elseif self.cls then
+		self.names_resolved = true
 		if self.cls.base then
 			self.cls.base = self.cls.base:resolve_named(s)
 			if not self.cls.base.cls then
@@ -105,7 +112,6 @@ function type_mt:resolve_named(s, visited)
 		for i, v in ipairs(self.cls.members) do
 			self.cls.members[i] = v:resolve_named(s)
 		end
-		self.names_resolved = true
 
 	end
 	return self
@@ -129,7 +135,7 @@ function type_mt:equal(other)
 		return true
 	elseif self.is_function and other.is_function then
 		if #self.call.params ~= #other.call.params then return false end
-		if self.call.vararg ~= other.call.vararg then return false end
+		if (not self.call.vararg) ~= (not other.call.vararg) then return false end
 		if not self.call.ret:equal(other.call.ret) then return false end
 		for i, v in ipairs(self.call.params) do
 			if not v.ty:equal(other.call.params[i].ty) then return false end

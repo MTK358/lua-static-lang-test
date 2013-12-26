@@ -397,6 +397,42 @@ check_types_tbl = {
 		node.ty = node[2].ty
 	end;
 
+	--[=[
+	['method_call'] = function (s, node, tsuggest)
+		check_types(s, node[2], nil)
+		local call = node[2].ty.call
+		if not call then
+			s.error(('value with type `%s` is not callable'):format(node[2].ty:to_str()), false, node[2]:get_location())
+		end
+		if call.vararg then
+			if #call.params > #node-2 then
+				s.error(('function expected at least %d parameters (not counting hidden `self`), got %d'):format(#call.params, #node-2), false, node[2]:get_location())
+			end
+			for i = 3, #node do
+				local param = call.params[i-2]
+				if param then
+					local expected_type = param.ty
+					check_types(s, node[i], expected_type)
+					expect_type(s, node, i, expected_type, 'in function parameter #%d', i-2)
+				else
+					check_types(s, node[i], nil)
+					expect_value(s, node, i)
+				end
+			end
+		else
+			if #call.params ~= #node-2 then
+				s.error(('function expected %d parameters (not counting hidden `self`), got %d'):format(#call.params, #node-2), false, node[2]:get_location())
+			end
+			for i = 3, #node do
+				local expected_type = call.params[i-2].ty
+				check_types(s, node[i], expected_type)
+				expect_type(s, node, i, expected_type, 'in function parameter #%d', i-2)
+			end
+		end
+		node.ty = call.ret
+	end;
+	--]=]
+
 	['call'] = function (s, node, tsuggest)
 		check_types(s, node[2], nil)
 		local call = node[2].ty.call

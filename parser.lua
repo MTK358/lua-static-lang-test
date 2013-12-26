@@ -280,6 +280,15 @@ function nt.suffix_expr(s)
 			expect(s, '<name>')
 			e = ast_node(s, 'field', e, text)
 
+		elseif s.tok == ':' then
+			nexttok(s)
+			local name = s.tokval
+			e = ast_node(s, 'method_call', e, name)
+			expect(s, '<name>')
+			expect(s, '(')
+			nt.comma_separated_seq(s, e)
+			expect(s, ')')
+
 		elseif s.tok == '[' then
 			nexttok(s)
 			local key = nt.expr(s)
@@ -409,10 +418,10 @@ end
 
 function nt.struct_tyexpr(s)
 	local l,c = s.line, s.col
-	expect(s, '(')
+	expect(s, '{')
 	local t = {'ty_struct', {}}
 	local first = true
-	while s.tok ~= ')' do
+	while s.tok ~= '}' do
 		if first then
 			first = false
 		else
@@ -425,7 +434,7 @@ function nt.struct_tyexpr(s)
 			local ty = nt.tyexpr(s)
 			table.insert(t[2], {name=name, ty=ty})
 		else
-			expect(s, ')')
+			expect(s, '}')
 		end
 	end
 	nexttok(s)
@@ -439,10 +448,10 @@ function nt.class_tyexpr(s)
 		nexttok(s)
 		base = nt.tyexpr(s)
 	end
-	expect(s, '(')
+	expect(s, '{')
 	local t = {'ty_class', {}, base}
 	local first = true
-	while s.tok ~= ')' do
+	while s.tok ~= '}' do
 		if first then
 			first = false
 		else
@@ -455,7 +464,7 @@ function nt.class_tyexpr(s)
 			local ty = nt.tyexpr(s)
 			table.insert(t[2], {name=name, ty=ty})
 		else
-			expect(s, ')')
+			expect(s, '}')
 		end
 	end
 	nexttok(s)
@@ -464,10 +473,10 @@ end
 
 function nt.variant_tyexpr(s)
 	local l,c = s.line, s.col
-	expect(s, '(')
+	expect(s, '{')
 	local t = ast_node(s, 'ty_variant', {})
 	local first = true
-	while s.tok ~= ')' do
+	while s.tok ~= '}' do
 		if first then
 			first = false
 		else
@@ -477,14 +486,14 @@ function nt.variant_tyexpr(s)
 			local name = s.tokval
 			nexttok(s)
 			local ty
-			if s.tok ~= ',' and s.tok ~= ')' then
+			if s.tok ~= ',' and s.tok ~= '}' then
 				ty = nt.tyexpr(s)
 			else
 				ty = ast_node(s, 'ty_tuple')
 			end
 			table.insert(t[2], {name=name, ty=ty})
 		else
-			expect(s, ')')
+			expect(s, '}')
 		end
 	end
 	nexttok(s)
@@ -523,6 +532,28 @@ function nt.tyexpr(s)
 	elseif s.tok == '!' then
 		nexttok(s)
 		return ast_node(s, 'ty_noret')
+
+	elseif s.tok == 'fn' then
+		nexttok(s)
+		expect(s, '(')
+		local rettype, argtypes, vararg = nil, {}, false
+		local first = true
+		while true do
+			if s.tok == ')' or s.tok == '->' then break end
+			if first then first=false else expect(s, ',') end
+			if nexttok == '...' then
+				vararg = true
+				break
+			end
+			table.insert(argtypes, {ty=nt.tyexpr(s)})
+		end
+		if s.tok == '->' then
+			nexttok(s)
+			rettype = nt.tyexpr(s)
+		end
+		expect(s, ')')
+		rettype = rettype or ast_node(s, 'ty_tuple')
+		return ast_node(s, 'ty_function', argtypes, rettype, vararg)
 
 	end
 	s.error('expected type expression, got `' .. s.tok .. '`')
